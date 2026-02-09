@@ -175,5 +175,5 @@ void loop()
     // Wait before next scan
     uint32_t waitTime = SCAN_INTERVAL_SEC - SCAN_DURATION_SEC;
     Serial.printf("Next scan in %d seconds...\n\n", waitTime);
-    delay(waitTime * 1000);
+    vTaskDelay(pdMS_TO_TICKS(waitTime * 1000));
 }
