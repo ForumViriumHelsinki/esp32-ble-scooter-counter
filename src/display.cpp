@@ -23,6 +23,20 @@ extern char scannerMacAddress[18];
 // Global OLED display object
 static Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
 
+// Display auto-off timer settings
+constexpr uint32_t DISPLAY_TIMEOUT_MS = 2000; // Turn off display after 2 seconds
+static TimerHandle_t displayTimer = nullptr;
+
+/**
+ * Timer callback to turn off display
+ * Called by FreeRTOS timer after timeout
+ */
+static void displayTimerCallback(TimerHandle_t xTimer)
+{
+    display.ssd1306_command(SSD1306_DISPLAYOFF);
+    Serial.println("OLED display turned off (auto-timeout)");
+}
+
 /**
  * Initialize OLED display
  */
@@ -34,6 +48,24 @@ void oledInit()
     {
         Serial.println("ERROR: SSD1306 allocation failed!");
         return;
+    }
+
+    // Create one-shot timer for auto-off functionality
+    displayTimer = xTimerCreate(
+        "DisplayTimer",                    // Timer name
+        pdMS_TO_TICKS(DISPLAY_TIMEOUT_MS), // Timer period in ticks
+        pdFALSE,                           // Auto-reload: false (one-shot timer)
+        nullptr,                           // Timer ID (not used)
+        displayTimerCallback               // Callback function
+    );
+
+    if (displayTimer == nullptr)
+    {
+        Serial.println("ERROR: Failed to create display timer!");
+    }
+    else
+    {
+        Serial.printf("Display auto-off timer created (%d ms timeout)\n", DISPLAY_TIMEOUT_MS);
     }
 
     display.clearDisplay();
@@ -54,6 +86,9 @@ void oledInit()
  */
 void oledUpdateStatus(const char *status1, const char *status2, const char *status3)
 {
+    // Turn on display (in case it was off)
+    display.ssd1306_command(SSD1306_DISPLAYON);
+
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
@@ -85,6 +120,12 @@ void oledUpdateStatus(const char *status1, const char *status2, const char *stat
     }
 
     display.display();
+
+    // Start/restart auto-off timer
+    if (displayTimer != nullptr)
+    {
+        xTimerReset(displayTimer, 0);
+    }
 }
 
 /**
@@ -92,6 +133,9 @@ void oledUpdateStatus(const char *status1, const char *status2, const char *stat
  */
 void oledUpdateScanStats(uint32_t devices, uint32_t scooters, uint32_t published, uint32_t dropped)
 {
+    // Turn on display (in case it was off)
+    display.ssd1306_command(SSD1306_DISPLAYON);
+
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
@@ -119,6 +163,30 @@ void oledUpdateScanStats(uint32_t devices, uint32_t scooters, uint32_t published
     display.println(published);
 
     display.display();
+
+    // Start/restart auto-off timer
+    if (displayTimer != nullptr)
+    {
+        xTimerReset(displayTimer, 0);
+    }
+}
+
+/**
+ * Turn off OLED display
+ */
+void oledOff()
+{
+    display.ssd1306_command(SSD1306_DISPLAYOFF);
+    Serial.println("OLED display turned off");
+}
+
+/**
+ * Turn on OLED display
+ */
+void oledOn()
+{
+    display.ssd1306_command(SSD1306_DISPLAYON);
+    Serial.println("OLED display turned on");
 }
 
 #endif // HAS_OLED

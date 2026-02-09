@@ -3,6 +3,7 @@
  */
 
 #include "mqtt_handler.h"
+#include "device_data.h"
 #include "utils.h"
 #include "config.h"
 #include <WiFi.h>
@@ -37,27 +38,6 @@ extern char scannerMacAddress[18];
 extern char mqttTopic[64];
 extern uint32_t mqttPublished;
 extern uint32_t mqttDropped;
-
-// DeviceData struct must match main.cpp definition
-struct DeviceData
-{
-    char mac[18];
-    char addrType[12];
-    int rssi;
-    int8_t txPower;
-    bool hasTxPower;
-    char name[32];
-    char mfgId[5];
-    char mfgData[64];
-    char services[128];
-    uint16_t appearance;
-    bool hasAppearance;
-    bool connectable;
-    uint8_t advType;
-    bool isScooter;
-    uint32_t uptime;
-    char timestamp[32];
-};
 
 /**
  * Connect to WiFi

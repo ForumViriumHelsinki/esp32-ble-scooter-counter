@@ -27,6 +27,16 @@ void oledUpdateStatus(const char* status1, const char* status2 = nullptr, const 
  */
 void oledUpdateScanStats(uint32_t devices, uint32_t scooters, uint32_t published, uint32_t dropped);
 
+/**
+ * Turn off OLED display
+ */
+void oledOff();
+
+/**
+ * Turn on OLED display
+ */
+void oledOn();
+
 #endif // HAS_OLED
 
 #endif // DISPLAY_H

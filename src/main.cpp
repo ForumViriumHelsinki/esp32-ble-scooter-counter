@@ -19,6 +19,7 @@
 #include "config.h"
 
 // Module headers
+#include "device_data.h"
 #include "utils.h"
 #include "ble_scanner.h"
 #include "mqtt_handler.h"
@@ -31,27 +32,6 @@ constexpr int8_t RSSI_THRESHOLD = -100;
 
 // Queue settings
 constexpr size_t DEVICE_QUEUE_SIZE = 50;
-
-// Device data structure for queue
-struct DeviceData
-{
-    char mac[18];      // "AA:BB:CC:DD:EE:FF\0"
-    char addrType[12]; // "public", "random", etc.
-    int rssi;
-    int8_t txPower;
-    bool hasTxPower;
-    char name[32];
-    char mfgId[5];      // "XXXX\0"
-    char mfgData[64];   // Hex string (limited length)
-    char services[128]; // Semicolon-separated UUIDs
-    uint16_t appearance;
-    bool hasAppearance;
-    bool connectable;
-    uint8_t advType;
-    bool isScooter;
-    uint32_t uptime;
-    char timestamp[32]; // "2026-02-09T14:30:45Z\0"
-};
 
 // Global objects
 QueueHandle_t deviceQueue = nullptr;

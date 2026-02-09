@@ -3,6 +3,7 @@
  */
 
 #include "ble_scanner.h"
+#include "device_data.h"
 #include "utils.h"
 #include <Arduino.h>
 
@@ -24,27 +25,6 @@ extern char scannerMacAddress[18];
 extern uint32_t totalDevicesFound;
 extern uint32_t scootersFound;
 extern uint32_t mqttDropped;
-
-// DeviceData struct must match main.cpp definition
-struct DeviceData
-{
-    char mac[18];
-    char addrType[12];
-    int rssi;
-    int8_t txPower;
-    bool hasTxPower;
-    char name[32];
-    char mfgId[5];
-    char mfgData[64];
-    char services[128];
-    uint16_t appearance;
-    bool hasAppearance;
-    bool connectable;
-    uint8_t advType;
-    bool isScooter;
-    uint32_t uptime;
-    char timestamp[32];
-};
 
 /**
  * Check if device name starts with any known scooter prefix

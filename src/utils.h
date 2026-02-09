@@ -9,9 +9,7 @@
 #define UTILS_H
 
 #include <Arduino.h>
-
-// Forward declaration of DeviceData struct (defined in main.cpp)
-struct DeviceData;
+#include "device_data.h"
 
 /**
  * Get current time as ISO8601 UTC string

@@ -9,28 +9,6 @@
 // External references to globals in main.cpp
 extern char scannerMacAddress[18];
 
-// DeviceData struct must be included from main.cpp
-// This is defined in main.cpp and accessed here
-struct DeviceData
-{
-    char mac[18];
-    char addrType[12];
-    int rssi;
-    int8_t txPower;
-    bool hasTxPower;
-    char name[32];
-    char mfgId[5];
-    char mfgData[64];
-    char services[128];
-    uint16_t appearance;
-    bool hasAppearance;
-    bool connectable;
-    uint8_t advType;
-    bool isScooter;
-    uint32_t uptime;
-    char timestamp[32];
-};
-
 /**
  * Get current time as ISO8601 UTC string
  * Returns empty string if time is not yet synchronized
@@ -186,11 +164,11 @@ void buildJsonMessage(const DeviceData &dev, char *buffer, size_t bufferLen)
                         "\"connectable\":%s,"
                         "\"adv_type\":%d,"
                         "\"is_scooter\":%s,"
-                        "\"timestamp\":%u",
+                        "\"uptime\":%d",
                         dev.connectable ? "true" : "false",
                         dev.advType,
                         dev.isScooter ? "true" : "false",
-                        dev.timestamp);
+                        dev.uptime);
 
     // ISO time (optional, only if synchronized)
     if (dev.timestamp[0] != '\0')
