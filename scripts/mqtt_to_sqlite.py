@@ -13,6 +13,7 @@ import logging
 import signal
 import sqlite3
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -58,8 +59,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--client-id",
-        default="ble-sqlite-logger",
-        help="MQTT client ID (default: ble-sqlite-logger)",
+        default=None,
+        help="MQTT client ID (default: auto-generated unique ID)",
     )
     parser.add_argument(
         "--log",
@@ -97,7 +98,7 @@ def init_database(db_path: Path) -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS scans (
             id INTEGER PRIMARY KEY,
             received_at TEXT NOT NULL,
-            isotime TEXT NULL,
+            timestamp TEXT NULL,
             scanner_id TEXT NOT NULL,
             mac TEXT NOT NULL,
             addr_type TEXT,
@@ -110,7 +111,7 @@ def init_database(db_path: Path) -> sqlite3.Connection:
             connectable INTEGER,
             adv_type INTEGER,
             is_scooter INTEGER,
-            device_timestamp INTEGER,
+            uptime INTEGER,
             raw_json TEXT
         )
     """)
@@ -152,7 +153,7 @@ class BufferedInserter:
 
         record = (
             received_at,
-            payload.get("isotime"),
+            payload.get("timestamp"),
             payload.get("scanner_id"),
             payload.get("mac"),
             payload.get("addr_type"),
@@ -165,7 +166,7 @@ class BufferedInserter:
             payload.get("connectable"),
             payload.get("adv_type"),
             payload.get("is_scooter"),
-            payload.get("timestamp"),
+            payload.get("uptime"),
             json.dumps(payload),
         )
 
@@ -202,8 +203,8 @@ class BufferedInserter:
             self.conn.executemany(
                 """
                 INSERT INTO scans (
-                    received_at, isotime, scanner_id, mac, addr_type, rssi, tx_power, name, mfg_id, mfg_data,
-                    services, connectable, adv_type, is_scooter, device_timestamp, raw_json
+                    received_at, timestamp, scanner_id, mac, addr_type, rssi, tx_power, name, mfg_id, mfg_data,
+                    services, connectable, adv_type, is_scooter, uptime, raw_json
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self.buffer,
@@ -287,12 +288,12 @@ def main() -> None:
         try:
             payload = json.loads(msg.payload.decode("utf-8"))
             inserter.add(payload, received_at)
-            isotime = payload.get("isotime", "?")
+            timestamp = payload.get("timestamp", "?")
             scanner_id = payload.get("scanner_id", "?")
             name = payload.get("name", "?")
             mac = payload.get("mac", "?")
             rssi = payload.get("rssi", "?")
-            logging.debug(f"[{received_at}] [{isotime}] [{scanner_id}] {name} ({mac}) RSSI: {rssi}")
+            logging.debug(f"[{received_at}] [{timestamp}] [{scanner_id}] {name} ({mac}) RSSI: {rssi}")
         except json.JSONDecodeError as e:
             logging.error(f"[{received_at}] Invalid JSON: {e}")
         except Exception as e:
@@ -301,9 +302,13 @@ def main() -> None:
     def on_disconnect(client, userdata, flags, reason_code, properties):
         logging.info(f"Disconnected (reason: {reason_code})")
 
+    # Generate unique client ID if not provided
+    client_id = args.client_id if args.client_id else f"ble-sqlite-logger-{uuid.uuid4().hex[:8]}"
+    logging.info(f"Using MQTT client ID: {client_id}")
+
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-        client_id=args.client_id,
+        client_id=client_id,
     )
 
     if args.username:
