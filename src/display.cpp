@@ -24,7 +24,7 @@ extern char scannerMacAddress[18];
 static Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
 
 // Display auto-off timer settings
-constexpr uint32_t DISPLAY_TIMEOUT_MS = 2000; // Turn off display after 2 seconds
+constexpr uint32_t DISPLAY_TIMEOUT_MS = 3000; // Turn off display after 2 seconds
 static TimerHandle_t displayTimer = nullptr;
 
 /**
